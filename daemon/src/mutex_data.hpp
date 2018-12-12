@@ -10,29 +10,35 @@
 namespace mtxpol {
 
 struct Mutex {
-    enum State: std::int8_t {
+    enum State: std::uint8_t {
         LOCKED = 0,
         UNLOCKED = 1,
     };
 
-    std::int32_t id;
+    std::uint32_t id;
     State state;
 };
 
 struct MutexRequest {
-    enum Operation: std::int8_t {
+    enum Operation: std::uint8_t {
         LOCK = 0,
         UNLOCK = 1,
     };
 
     pid_t processId;
-    std::int32_t mutexId;
+    std::uint32_t mutexId;
     Operation op;
 };
 
 struct MutexData {
     std::vector<Mutex> mutexes;
     std::vector<MutexRequest> requests;
+};
+
+enum MessagePrefixByte: std::uint8_t {
+    DONE = 0,
+    MUTEX = 1,
+    REQUEST = 2,
 };
 
 }  // namespace mtxpol
