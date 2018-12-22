@@ -7,15 +7,16 @@
 #include <cstring>
 
 #include <iostream>
+#include <string>
 
-#include "data_gatherer.hpp"
-#include "mutex_policy_enforcer.hpp"
-#include "polling_loop.hpp"
+#include "mutex_policy.hpp"
+#include "request.hpp"
 
+using mtxpol::MutexPolicy;
+using mtxpol::Request;
+using std::cin;
 using std::cout;
-using mtxpol::DataGatherer;
-using mtxpol::MutexPolicyEnforcer;
-using mtxpol::PollingLoop;
+using std::string;
 
 void daemonize() {
     pid_t childPid = fork();
@@ -55,15 +56,56 @@ int main(int argc, char* argv[]) {
         cout << "Running in debug mode, not daemonizing the process.\n";
     }
 
-    auto dataGatherer = new DataGatherer();
-    auto policyEnforcer = new MutexPolicyEnforcer();
-    auto loop = new PollingLoop(dataGatherer, policyEnforcer);
+    auto policy = new MutexPolicy();
+    policy->startRequestHandlerThread();
 
-    loop->join();
-
-    delete loop;
-    delete policyEnforcer;
-    delete dataGatherer;
-
+    if (debug) {
+        int requestId = 0;
+        cout << "Welcome to Mutex Policy's debug shell! The commands available are:\n";
+        cout << "\t- open   <mutexId> <processId> - open   mutex <mutexId> as <processId>\n";
+        cout << "\t- close  <mutexId> <processId> - close  mutex <mutexId> as <processId>\n";
+        cout << "\t- lock   <mutexId> <processId> - lock   mutex <mutexId> as <processId>\n";
+        cout << "\t- unlock <mutexId> <processId> - unlock mutex <mutexId> as <processId>\n";
+        cout << "\t- terminate - terminate the daemon.\n";
+        string input;
+        std::vector<int> requests;
+        while (cin >> input) {
+            if (input == "terminate") {
+                cout << "Terminating daemon...\n";
+                policy->terminate();
+                cout << "Done.\n";
+                break;
+            } else {
+                int id, procId;
+                cin >> id >> procId;
+                Request::Type type;
+                if (input == "open") {
+                    type = Request::OPEN;
+                } else if (input == "close") {
+                    type = Request::CLOSE;
+                } else if (input == "lock") {
+                    type = Request::LOCK;
+                } else if (input == "unlock") {
+                    type = Request::UNLOCK;
+                } else {
+                    cout << "Unknown command '" << input << "'. Not processing.\n";
+                    continue;
+                }
+                policy->enqueueRequest(new Request(
+                                ++requestId,
+                                procId,
+                                type,
+                                id,
+                                [&requestId](Request* request, int response) {
+                    cout << "Request "
+                         << request->getId()
+                         << " was resolved with response "
+                         << response
+                         << ".\n";
+                }));
+            }
+        }
+    }
+    delete policy;
     return 0;
 }
