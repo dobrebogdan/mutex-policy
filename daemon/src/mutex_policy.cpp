@@ -14,6 +14,37 @@ using std::thread;
 
 namespace mtxpol {
 
+MutexStatus::MutexStatus(pid_t _creator): creator(_creator), locker(0) {}
+
+void MutexStatus::pushPendingLockRequest(Request* req) {
+    pendingLockRequests.push(req);
+}
+
+Request* MutexStatus::popPendingLockRequest() {
+    if (pendingLockRequests.empty()) {
+        return nullptr;
+    }
+    Request* req = pendingLockRequests.front();
+    pendingLockRequests.pop();
+    return req;
+}
+
+bool MutexStatus::isLocked(pid_t processId) const {
+    return locker != processId;
+}
+
+bool MutexStatus::isCreatedBy(pid_t processId) const {
+    return creator == processId;
+}
+
+void MutexStatus::lock(pid_t processId) {
+    locker = processId;
+}
+
+void MutexStatus::unlock() {
+    locker = 0;
+}
+
 MutexPolicy::~MutexPolicy() {
     terminate();
     if (requestHandlerThread != nullptr) {
@@ -41,13 +72,9 @@ void MutexPolicy::enqueueRequest(Request* request) {
 void MutexPolicy::startRequestHandling() {
     while (!isTerminated) {
         Request* request = extractRequest();
-        Request* firstExtractedRequest = request;
-        bool firstRequest = true;
-        while (request != nullptr &&
-               (firstRequest || request != firstExtractedRequest)) {
+        while (request != nullptr) {
             handleRequest(request);
             request = extractRequest();
-            firstRequest = false;
         }
         usleep(100);
     }
@@ -55,6 +82,7 @@ void MutexPolicy::startRequestHandling() {
 
 void MutexPolicy::handleRequest(Request* req) {
     int response;
+    Request* resolvableLockRequest = nullptr;
     switch (req->getType()) {
         case Request::OPEN:
             response = openMutex(req->getMutexId(), req->getProcessId());
@@ -67,15 +95,25 @@ void MutexPolicy::handleRequest(Request* req) {
             break;
         case Request::UNLOCK:
             response = unlockMutex(req->getMutexId(), req->getProcessId());
+            if (response == MTXPOL_SUCCESS) {
+                // On a successful unlock, check if there are any pending lock
+                // requests for this mutex.
+                resolvableLockRequest = mutexes[req->getMutexId()]->popPendingLockRequest();
+            }
             break;
         default:
             throw runtime_error("Unknown request type.");
     }
     if (response == MTXPOL_REENQUEUE_REQUEST) {
-        enqueueRequest(req);
+        mutexes[req->getMutexId()]->pushPendingLockRequest(req);
     } else {
         req->resolve(response);
         delete req;
+    }
+    if (resolvableLockRequest != nullptr) {
+        // Handle a lock request that was pending in case the mutex it requested
+        // has been unlocked.
+        handleRequest(resolvableLockRequest);
     }
 }
 
@@ -83,7 +121,7 @@ int MutexPolicy::openMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId) {
     if (mutexes.count(mutexId) != 0) {
         return MTXPOL_ERR_MUTEX_ALREADY_OPEN;
     }
-    mutexes[mutexId] = MutexStatus{0, processId};
+    mutexes[mutexId] = new MutexStatus(processId);
     return MTXPOL_SUCCESS;
 }
 
@@ -92,10 +130,10 @@ int MutexPolicy::closeMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId) {
     if (mutexPosition == mutexes.end()) {
         return MTXPOL_ERR_MUTEX_NOT_OPEN;
     }
-    if (mutexPosition->second.locker != 0) {
+    if (mutexPosition->second->isLocked()) {
         return MTXPOL_ERR_MUTEX_LOCKED;
     }
-    if (mutexPosition->second.creator != processId) {
+    if (!mutexPosition->second->isCreatedBy(processId)) {
         return MTXPOL_ERR_MUTEX_NOT_OWNED;
     }
     mutexes.erase(mutexPosition);
@@ -107,10 +145,10 @@ int MutexPolicy::lockMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId) {
     if (mutexPosition == mutexes.end()) {
         return MTXPOL_ERR_MUTEX_NOT_OPEN;
     }
-    if (mutexPosition->second.locker != 0) {
+    if (mutexPosition->second->isLocked()) {
         return MTXPOL_REENQUEUE_REQUEST;
     }
-    mutexPosition->second.locker = processId;
+    mutexPosition->second->lock(processId);
     return MTXPOL_SUCCESS;
 }
 
@@ -119,13 +157,13 @@ int MutexPolicy::unlockMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId) {
     if (mutexPosition == mutexes.end()) {
         return MTXPOL_ERR_MUTEX_NOT_OPEN;
     }
-    if (mutexPosition->second.locker == 0) {
+    if (!mutexPosition->second->isLocked()) {
         return MTXPOL_ERR_MUTEX_ALREADY_UNLOCKED;
     }
-    if (mutexPosition->second.locker != processId) {
+    if (mutexPosition->second->isLocked(processId)) {
         return MTXPOL_ERR_MUTEX_NOT_OWNED;
     }
-    mutexPosition->second.locker = 0;
+    mutexPosition->second->unlock();
     return MTXPOL_SUCCESS;
 }
 
