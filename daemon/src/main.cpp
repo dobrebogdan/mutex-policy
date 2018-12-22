@@ -1,4 +1,4 @@
-#define VERSION "0.0.1"
+#define VERSION "0.0.2"
 
 #include <unistd.h>
 
@@ -68,7 +68,6 @@ int main(int argc, char* argv[]) {
         cout << "\t- unlock <mutexId> <processId> - unlock mutex <mutexId> as <processId>\n";
         cout << "\t- terminate - terminate the daemon.\n";
         string input;
-        std::vector<int> requests;
         while (cin >> input) {
             if (input == "terminate") {
                 cout << "Terminating daemon...\n";
