@@ -2,6 +2,7 @@
 #include <string>
 
 #include "debug_shell.hpp"
+#include "prettify.hpp"
 
 using std::cin;
 using std::cout;
@@ -12,7 +13,20 @@ namespace {
 void message(mtxpol::Request* request, int response) {
     // TODO(darius98): Make this better.
     cout << "\r";
-    cout << "Request " << request->getId() << " resolved with response " << response << ".\n";
+    cout << "Request "
+         << request->getId()
+         << " (Process "
+         << request->getProcessId()
+         << " "
+         << mtxpol::prettyRequestType(request->getType())
+         << "s mutex "
+         << request->getMutexId()
+         << ")"
+         << " resolved with response "
+         << response
+         << " ("
+         << mtxpol::prettyResponse(response)
+         << ").\n";
 }
 
 }  // namespace

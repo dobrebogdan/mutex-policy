@@ -8,6 +8,7 @@ add_executable(daemon
         src/request.cpp
 
         src/debug/debug_shell.cpp
+        src/debug/prettify.cpp
 )
 target_compile_definitions(daemon PUBLIC -DMTXPOL_TESTING)
 target_link_libraries(daemon PUBLIC pthread)
