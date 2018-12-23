@@ -27,6 +27,8 @@ void message(mtxpol::Request* request, int response) {
          << " ("
          << mtxpol::prettyResponse(response)
          << ").\n";
+    cout << "mtxpol$> ";
+    cout.flush();
 }
 
 }  // namespace
@@ -52,25 +54,15 @@ void openDebugShell(MutexPolicy* policy) {
             int id, procId;
             cin >> id >> procId;
             Request::Type type;
-            if (cmd == "open") {
-                type = Request::OPEN;
-            } else if (cmd == "close") {
-                type = Request::CLOSE;
-            } else if (cmd == "lock") {
-                type = Request::LOCK;
-            } else if (cmd == "unlock") {
-                type = Request::UNLOCK;
-            } else {
+            if      (cmd == "open")   type = Request::OPEN;
+            else if (cmd == "close")  type = Request::CLOSE;
+            else if (cmd == "lock")   type = Request::LOCK;
+            else if (cmd == "unlock") type = Request::UNLOCK;
+            else {
                 cout << "Unknown command '" << cmd << "'. Not processing.\n";
                 continue;
             }
-            ++requestId;
-            auto req = new Request(requestId, procId, type, id, [](Request* req, int resp) {
-                message(req, resp);
-                cout << "mtxpol$> ";
-                cout.flush();
-            });
-            policy->enqueueRequest(req);
+            policy->enqueueRequest(new Request(++requestId, procId, type, id, message));
         }
         cout << "mtxpol$> ";
     }
