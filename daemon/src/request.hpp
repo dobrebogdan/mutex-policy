@@ -15,11 +15,11 @@ class Request {
     typedef std::function<void(Request*, int)> Callback;
 
     /// Possible types of request.
-    enum Type {
-        LOCK,
-        UNLOCK,
-        OPEN,
-        CLOSE
+    enum Type: MTXPOL_REQ_TYPE {
+        OPEN = MTXPOL_REQ_OPEN,
+        CLOSE = MTXPOL_REQ_CLOSE,
+        LOCK = MTXPOL_REQ_LOCK,
+        UNLOCK = MTXPOL_REQ_UNLOCK,
     };
 
     Request(int _id, pid_t _processId, Type _type, MTXPOL_MUTEX _mutexId, Callback _callback);

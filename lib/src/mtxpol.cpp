@@ -1,13 +1,23 @@
+#include <unistd.h>
+
 #include <mtxpol.hpp>
 
-int mtxpol_Open(int processId, MTXPOL_MUTEX mutexId) {
+int mtxpol_Request(MTXPOL_REQ_TYPE requestType, MTXPOL_MUTEX mutexId) {
+    pid_t processId = getpid();
 }
 
-int mtxpol_Close(int processId, MTXPOL_MUTEX mutexId) {
+int mtxpol_Open(MTXPOL_MUTEX mutexId) {
+    return mtxpol_Request(MTXPOL_REQ_OPEN, mutexId);
 }
 
-int mtxpol_Lock(int processId, MTXPOL_MUTEX mutexId) {
+int mtxpol_Close(MTXPOL_MUTEX mutexId) {
+    return mtxpol_Request(MTXPOL_REQ_CLOSE, mutexId);
 }
 
-int mtxpol_Unlock(int processId, MTXPOL_MUTEX mutexId) {
+int mtxpol_Lock(MTXPOL_MUTEX mutexId) {
+    return mtxpol_Request(MTXPOL_REQ_LOCK, mutexId);
+}
+
+int mtxpol_Unlock(MTXPOL_MUTEX mutexId) {
+    return mtxpol_Request(MTXPOL_REQ_UNLOCK, mutexId);
 }
