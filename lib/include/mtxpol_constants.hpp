@@ -45,4 +45,14 @@
 /// Returned by `mtxpol_Lock` if mutex was not locked when an unlock was requested.
 #define MTXPOL_ERR_MUTEX_ALREADY_UNLOCKED 5
 
+/// Returned by `mtxpol_Open`, `mtxpol_Close`, `mtxpol_Lock` and `mtxpol_Unlock` in case
+/// they were unable to make the request (likely the mtxpol daemon is not running).
+#define MTXPOL_ERR_MTXPOL_NOT_RUNNING 6
+
+/// Used internally in the library to represent that the daemon did not respond yet.
+#define MTXPOL_NO_RESPONSE 7
+
+/// Size of a message that is sent to the daemon on every request.
+#define MTXPOL_MESSAGE_SIZE (sizeof(int) + sizeof(MTXPOL_REQ_TYPE) + sizeof(pid_t) + sizeof(MTXPOL_MUTEX))
+
 #endif  // LIB_INCLUDE_MUTEX_POLICY_CONSTANTS_HPP_
