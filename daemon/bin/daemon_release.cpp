@@ -15,6 +15,7 @@ int main(int argc, char* argv[]) {
 
     auto policy = new MutexPolicy();
     policy->startRequestHandlerThread();
+    policy->startRequestResolverThread();
 
     // TODO(darius98): Start looking for input pipes in the ~/.mtxpol folder.
 

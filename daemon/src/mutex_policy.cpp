@@ -1,14 +1,18 @@
 #include <unistd.h>
 
 #include <stdexcept>
+#include <tuple>
+
 #include <mutex_policy.hpp>
 
 #define MTXPOL_REENQUEUE_REQUEST -1
 
 using std::lock_guard;
 using std::mutex;
+using std::pair;
 using std::runtime_error;
 using std::thread;
+using std::tie;
 
 namespace mtxpol {
 
@@ -17,6 +21,10 @@ MutexPolicy::~MutexPolicy() {
     if (requestHandlerThread != nullptr) {
         requestHandlerThread->join();
         delete requestHandlerThread;
+    }
+    if (requestResolverThread != nullptr) {
+        requestResolverThread->join();
+        delete requestResolverThread;
     }
 }
 
@@ -27,13 +35,15 @@ void MutexPolicy::startRequestHandlerThread() {
     requestHandlerThread = new thread(&MutexPolicy::startRequestHandling, this);
 }
 
-void MutexPolicy::terminate() {
-    isTerminated = true;
+void MutexPolicy::startRequestResolverThread() {
+    if (requestResolverThread != nullptr) {
+        throw runtime_error("Resolver thread started twice!");
+    }
+    requestResolverThread = new thread(&MutexPolicy::startRequestResolving, this);
 }
 
-void MutexPolicy::enqueueRequest(Request* request) {
-    lock_guard<mutex> guard(requestQueueMutex);
-    requestQueue.push(request);
+void MutexPolicy::terminate() {
+    isTerminated = true;
 }
 
 void MutexPolicy::startRequestHandling() {
@@ -42,6 +52,19 @@ void MutexPolicy::startRequestHandling() {
         while (request != nullptr) {
             handleRequest(request);
             request = extractRequest();
+        }
+        usleep(100);
+    }
+}
+
+void MutexPolicy::startRequestResolving() {
+    while (!isTerminated) {
+        Request* request = nullptr;
+        int response = 0;
+        tie(request, response) = extractResolvedRequest();
+        while (request != nullptr) {
+            resolveRequest(request, response);
+            tie(request, response) = extractResolvedRequest();
         }
         usleep(100);
     }
@@ -74,14 +97,18 @@ void MutexPolicy::handleRequest(Request* req) {
     if (response == MTXPOL_REENQUEUE_REQUEST) {
         mutexes[req->getMutexId()]->pushPendingLockRequest(req);
     } else {
-        req->resolve(response);
-        delete req;
+        enqueueResolvedRequest(req, response);
     }
     if (resolvableLockRequest != nullptr) {
         // Handle a lock request that was pending in case the mutex it requested
         // has been unlocked.
         handleRequest(resolvableLockRequest);
     }
+}
+
+void MutexPolicy::resolveRequest(Request* req, int resp) {
+    req->resolve(resp);
+    delete req;
 }
 
 int MutexPolicy::openMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId) {
@@ -142,6 +169,26 @@ Request* MutexPolicy::extractRequest() {
     auto request = requestQueue.front();
     requestQueue.pop();
     return request;
+}
+
+void MutexPolicy::enqueueRequest(Request* request) {
+    lock_guard<mutex> guard(requestQueueMutex);
+    requestQueue.push(request);
+}
+
+pair<Request*, int> MutexPolicy::extractResolvedRequest() {
+    lock_guard<mutex> guard(resolvedRequestsQueueMutex);
+    if (resolvedRequestsQueue.empty()) {
+        return {nullptr, 0};
+    }
+    auto ret = resolvedRequestsQueue.front();
+    resolvedRequestsQueue.pop();
+    return ret;
+}
+
+void MutexPolicy::enqueueResolvedRequest(Request* request, int response) {
+    lock_guard<mutex> guard(resolvedRequestsQueueMutex);
+    resolvedRequestsQueue.push({request, response});
 }
 
 }  // namespace mtxpol

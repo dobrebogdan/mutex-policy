@@ -22,6 +22,9 @@ class MutexPolicy {
     /// Start handling requests on a new thread.
     void startRequestHandlerThread();
 
+    /// Start the thread that calls callbacks and cleans up resolved requests.
+    void startRequestResolverThread();
+
     /// Terminate the thread loops.
     void terminate();
 
@@ -31,7 +34,12 @@ class MutexPolicy {
     /// Start handling requests on the current thread.
     void startRequestHandling();
 
+    /// Start resolving requests on the current thread.
+    void startRequestResolving();
+
     void handleRequest(Request* req);
+
+    void resolveRequest(Request* req, int resp);
 
     /// Handle process `processId` closing mutex `mutexId`.
     int openMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId);
@@ -47,12 +55,21 @@ class MutexPolicy {
 
     Request* extractRequest();
 
+    std::pair<Request*, int> extractResolvedRequest();
+
+    void enqueueResolvedRequest(Request* request, int response);
+
     std::map<MUTEX_DESCRIPTOR, MutexStatus*> mutexes;
 
     std::mutex requestQueueMutex;
     std::queue<Request*> requestQueue;
 
+    std::mutex resolvedRequestsQueueMutex;
+    std::queue<std::pair<Request*, int>> resolvedRequestsQueue;
+
     std::thread* requestHandlerThread = nullptr;
+    std::thread* requestResolverThread = nullptr;
+
     volatile bool isTerminated = false;
 };
 
