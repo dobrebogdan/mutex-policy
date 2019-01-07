@@ -5,10 +5,9 @@
 
 #include <functional>
 
-#include "constants.hpp"
+#include <constants.hpp>
 
 namespace mtxpol {
-
 
 /// The internal representation of a request inside the daemon.
 class Request {

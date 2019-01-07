@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
 
-#include "debug_shell.hpp"
-#include "prettify.hpp"
+#include <debug/debug_shell.hpp>
+#include <debug/prettify.hpp>
 
 using std::cin;
 using std::cout;

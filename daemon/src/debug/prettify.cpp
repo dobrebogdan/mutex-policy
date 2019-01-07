@@ -1,8 +1,7 @@
 #include <stdexcept>
 
-#include "prettify.hpp"
-
-#include "../constants.hpp"
+#include <constants.hpp>
+#include <debug/prettify.hpp>
 
 using std::runtime_error;
 using std::string;

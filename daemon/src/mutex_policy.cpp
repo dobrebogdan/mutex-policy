@@ -1,8 +1,7 @@
-#include <zconf.h>
+#include <unistd.h>
 
 #include <stdexcept>
-
-#include "mutex_policy.hpp"
+#include <mutex_policy.hpp>
 
 #define MTXPOL_REENQUEUE_REQUEST -1
 

@@ -8,9 +8,9 @@
 #include <queue>
 #include <thread>
 
-#include "constants.hpp"
-#include "request.hpp"
-#include "mutex_status.hpp"
+#include <constants.hpp>
+#include <request.hpp>
+#include <mutex_status.hpp>
 
 namespace mtxpol {
 

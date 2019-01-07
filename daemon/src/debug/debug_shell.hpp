@@ -1,7 +1,7 @@
 #ifndef DAEMON_SRC_DEBUG_DEBUG_SHELL_HPP_
 #define DAEMON_SRC_DEBUG_DEBUG_SHELL_HPP_
 
-#include "../mutex_policy.hpp"
+#include <mutex_policy.hpp>
 
 namespace mtxpol {
 

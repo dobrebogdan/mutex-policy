@@ -5,7 +5,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "daemonize.hpp"
+#include <daemonize.hpp>
 
 namespace mtxpol {
 
