@@ -111,7 +111,7 @@ void MutexPolicy::resolveRequest(Request* req, int resp) {
     delete req;
 }
 
-int MutexPolicy::openMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId) {
+int MutexPolicy::openMutex(MTXPOL_MUTEX mutexId, pid_t processId) {
     if (mutexes.count(mutexId) != 0) {
         return MTXPOL_ERR_MUTEX_ALREADY_OPEN;
     }
@@ -119,7 +119,7 @@ int MutexPolicy::openMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId) {
     return MTXPOL_SUCCESS;
 }
 
-int MutexPolicy::closeMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId) {
+int MutexPolicy::closeMutex(MTXPOL_MUTEX mutexId, pid_t processId) {
     auto mutexPosition = mutexes.find(mutexId);
     if (mutexPosition == mutexes.end()) {
         return MTXPOL_ERR_MUTEX_NOT_OPEN;
@@ -134,7 +134,7 @@ int MutexPolicy::closeMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId) {
     return MTXPOL_SUCCESS;
 }
 
-int MutexPolicy::lockMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId) {
+int MutexPolicy::lockMutex(MTXPOL_MUTEX mutexId, pid_t processId) {
     auto mutexPosition = mutexes.find(mutexId);
     if (mutexPosition == mutexes.end()) {
         return MTXPOL_ERR_MUTEX_NOT_OPEN;
@@ -146,7 +146,7 @@ int MutexPolicy::lockMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId) {
     return MTXPOL_SUCCESS;
 }
 
-int MutexPolicy::unlockMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId) {
+int MutexPolicy::unlockMutex(MTXPOL_MUTEX mutexId, pid_t processId) {
     auto mutexPosition = mutexes.find(mutexId);
     if (mutexPosition == mutexes.end()) {
         return MTXPOL_ERR_MUTEX_NOT_OPEN;

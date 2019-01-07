@@ -5,7 +5,7 @@
 
 #include <functional>
 
-#include <constants.hpp>
+#include <mtxpol_constants.hpp>
 
 namespace mtxpol {
 
@@ -22,11 +22,7 @@ class Request {
         CLOSE
     };
 
-    Request(int _id,
-            pid_t _processId,
-            Type _type,
-            MUTEX_DESCRIPTOR _mutexId,
-            Callback _callback);
+    Request(int _id, pid_t _processId, Type _type, MTXPOL_MUTEX _mutexId, Callback _callback);
 
     int getId() const;
 
@@ -34,7 +30,7 @@ class Request {
 
     Type getType() const;
 
-    MUTEX_DESCRIPTOR getMutexId() const;
+    MTXPOL_MUTEX getMutexId() const;
 
     void resolve(int response);
 
@@ -49,7 +45,7 @@ class Request {
     Type type;
 
     /// Descriptor of affected mutex.
-    MUTEX_DESCRIPTOR mutexId;
+    MTXPOL_MUTEX mutexId;
 
     /// Callback to be executed when the request is resolved.
     ///

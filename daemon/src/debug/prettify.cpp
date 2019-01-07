@@ -1,7 +1,7 @@
 #include <stdexcept>
 
-#include <constants.hpp>
 #include <debug/prettify.hpp>
+#include <mtxpol_constants.hpp>
 
 using std::runtime_error;
 using std::string;

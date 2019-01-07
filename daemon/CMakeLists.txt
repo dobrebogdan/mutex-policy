@@ -9,7 +9,8 @@ add_library(daemon_lib
         src/debug/debug_shell.cpp
         src/debug/prettify.cpp
 )
-target_include_directories(daemon_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+target_include_directories(daemon_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(daemon_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../lib/include)
 
 add_executable(daemon_release bin/daemon_release.cpp)
 target_link_libraries(daemon_release PUBLIC pthread daemon_lib)

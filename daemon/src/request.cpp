@@ -6,16 +6,8 @@ using std::move;
 
 namespace mtxpol {
 
-Request::Request(int _id,
-                 pid_t _processId,
-                 Type _type,
-                 MUTEX_DESCRIPTOR _mutexId,
-                 Callback _callback):
-        id(_id),
-        processId(_processId),
-        type(_type),
-        mutexId(_mutexId),
-        callback(move(_callback)) {}
+Request::Request(int _id, pid_t _processId, Type _type, MTXPOL_MUTEX _mutexId, Callback _callback):
+        id(_id), processId(_processId), type(_type), mutexId(_mutexId), callback(move(_callback)) {}
 
 int Request::getId() const {
     return id;
@@ -29,7 +21,7 @@ Request::Type Request::getType() const {
     return type;
 }
 
-MUTEX_DESCRIPTOR Request::getMutexId() const {
+MTXPOL_MUTEX Request::getMutexId() const {
     return mutexId;
 }
 

@@ -8,8 +8,8 @@
 #include <queue>
 #include <thread>
 
-#include <constants.hpp>
 #include <request.hpp>
+#include <mtxpol_constants.hpp>
 #include <mutex_status.hpp>
 
 namespace mtxpol {
@@ -42,16 +42,16 @@ class MutexPolicy {
     void resolveRequest(Request* req, int resp);
 
     /// Handle process `processId` closing mutex `mutexId`.
-    int openMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId);
+    int openMutex(MTXPOL_MUTEX mutexId, pid_t processId);
 
     /// Handle process `processId` opening mutex `mutexId`.
-    int closeMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId);
+    int closeMutex(MTXPOL_MUTEX mutexId, pid_t processId);
 
     /// Handle process `processId` locking mutex `mutexId`.
-    int lockMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId);
+    int lockMutex(MTXPOL_MUTEX mutexId, pid_t processId);
 
     /// Handle process `processId` unlocking mutex `mutexId`.
-    int unlockMutex(MUTEX_DESCRIPTOR mutexId, pid_t processId);
+    int unlockMutex(MTXPOL_MUTEX mutexId, pid_t processId);
 
     Request* extractRequest();
 
@@ -59,7 +59,7 @@ class MutexPolicy {
 
     void enqueueResolvedRequest(Request* request, int response);
 
-    std::map<MUTEX_DESCRIPTOR, MutexStatus*> mutexes;
+    std::map<MTXPOL_MUTEX, MutexStatus*> mutexes;
 
     std::mutex requestQueueMutex;
     std::queue<Request*> requestQueue;
