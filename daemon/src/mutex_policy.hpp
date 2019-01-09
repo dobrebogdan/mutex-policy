@@ -4,13 +4,12 @@
 #include <sys/types.h>
 
 #include <map>
-#include <mutex>
-#include <queue>
 #include <thread>
 
-#include <request.hpp>
+#include <concurrent_queue.hpp>
 #include <mtxpol_constants.hpp>
 #include <mutex_status.hpp>
+#include <request.hpp>
 
 namespace mtxpol {
 
@@ -39,7 +38,7 @@ class MutexPolicy {
 
     void handleRequest(Request* req);
 
-    void resolveRequest(Request* req, int resp);
+    void resolveRequest(std::pair<Request*, int> resolvedRequest);
 
     /// Handle process `processId` closing mutex `mutexId`.
     int openMutex(MTXPOL_MUTEX mutexId, pid_t processId);
@@ -53,19 +52,10 @@ class MutexPolicy {
     /// Handle process `processId` unlocking mutex `mutexId`.
     int unlockMutex(MTXPOL_MUTEX mutexId, pid_t processId);
 
-    Request* extractRequest();
-
-    std::pair<Request*, int> extractResolvedRequest();
-
-    void enqueueResolvedRequest(Request* request, int response);
-
     std::map<MTXPOL_MUTEX, MutexStatus*> mutexes;
 
-    std::mutex requestQueueMutex;
-    std::queue<Request*> requestQueue;
-
-    std::mutex resolvedRequestsQueueMutex;
-    std::queue<std::pair<Request*, int>> resolvedRequestsQueue;
+    ConcurrentQueue<Request*> requestsQueue;
+    ConcurrentQueue<std::pair<Request*, int>> resolvedRequestsQueue;
 
     std::thread* requestHandlerThread = nullptr;
     std::thread* requestResolverThread = nullptr;

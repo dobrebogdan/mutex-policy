@@ -47,24 +47,20 @@ void MutexPolicy::terminate() {
 }
 
 void MutexPolicy::startRequestHandling() {
+    Request* request;
     while (!isTerminated) {
-        Request* request = extractRequest();
-        while (request != nullptr) {
+        while (requestsQueue.take(&request)) {
             handleRequest(request);
-            request = extractRequest();
         }
         usleep(100);
     }
 }
 
 void MutexPolicy::startRequestResolving() {
+    pair<Request*, int> resolvedRequest;
     while (!isTerminated) {
-        Request* request = nullptr;
-        int response = 0;
-        tie(request, response) = extractResolvedRequest();
-        while (request != nullptr) {
-            resolveRequest(request, response);
-            tie(request, response) = extractResolvedRequest();
+        while (resolvedRequestsQueue.take(&resolvedRequest)) {
+            resolveRequest(resolvedRequest);
         }
         usleep(100);
     }
@@ -95,9 +91,9 @@ void MutexPolicy::handleRequest(Request* req) {
             throw runtime_error("Unknown request type.");
     }
     if (response == MTXPOL_REENQUEUE_REQUEST) {
-        mutexes[req->getMutexId()]->pushPendingLockRequest(req);
+        resolvedRequestsQueue.put({req, response});
     } else {
-        enqueueResolvedRequest(req, response);
+        mutexes[req->getMutexId()]->pushPendingLockRequest(req);
     }
     if (resolvableLockRequest != nullptr) {
         // Handle a lock request that was pending in case the mutex it requested
@@ -106,9 +102,9 @@ void MutexPolicy::handleRequest(Request* req) {
     }
 }
 
-void MutexPolicy::resolveRequest(Request* req, int resp) {
-    req->resolve(resp);
-    delete req;
+void MutexPolicy::resolveRequest(pair<Request*, int> resolvedRequest) {
+    resolvedRequest.first->resolve(resolvedRequest.second);
+    delete resolvedRequest.first;
 }
 
 int MutexPolicy::openMutex(MTXPOL_MUTEX mutexId, pid_t processId) {
@@ -161,34 +157,8 @@ int MutexPolicy::unlockMutex(MTXPOL_MUTEX mutexId, pid_t processId) {
     return MTXPOL_SUCCESS;
 }
 
-Request* MutexPolicy::extractRequest() {
-    lock_guard<mutex> guard(requestQueueMutex);
-    if (requestQueue.empty()) {
-        return nullptr;
-    }
-    auto request = requestQueue.front();
-    requestQueue.pop();
-    return request;
-}
-
 void MutexPolicy::enqueueRequest(Request* request) {
-    lock_guard<mutex> guard(requestQueueMutex);
-    requestQueue.push(request);
-}
-
-pair<Request*, int> MutexPolicy::extractResolvedRequest() {
-    lock_guard<mutex> guard(resolvedRequestsQueueMutex);
-    if (resolvedRequestsQueue.empty()) {
-        return {nullptr, 0};
-    }
-    auto ret = resolvedRequestsQueue.front();
-    resolvedRequestsQueue.pop();
-    return ret;
-}
-
-void MutexPolicy::enqueueResolvedRequest(Request* request, int response) {
-    lock_guard<mutex> guard(resolvedRequestsQueueMutex);
-    resolvedRequestsQueue.push({request, response});
+    requestsQueue.put(request);
 }
 
 }  // namespace mtxpol

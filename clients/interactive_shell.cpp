@@ -39,7 +39,7 @@ int main() {
             ret = mtxpol_Unlock(id);
         }
         if (ret == -1) {
-            cout << " (unknown command).";
+            cout << "Unknown command.";
         } else {
             cout << ret << " (" << prettyResponse(ret) << ")";
         }
