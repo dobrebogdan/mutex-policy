@@ -18,11 +18,9 @@ namespace {
 
 void ensureDir(const string &path) {
     int ret = mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
-    if (ret < 0) {
-        if (errno != EEXIST) {
-            perror("mkdir");
-            exit(errno);
-        }
+    if (ret < 0 && errno != EEXIST) {
+        perror("mkdir");
+        exit(errno);
     }
 }
 
@@ -63,20 +61,8 @@ void respond(mtxpol::Request* request, int response) {
         perror("mkfifo");
         exit(errno);
     }
-    int fd = open(outputFifoName.c_str(), O_WRONLY);
-    if (fd < 0) {
-        perror("open");
-        exit(errno);
-    }
-    int bytesWritten = 0;
-    while (bytesWritten < sizeof(int)) {
-        ssize_t chunk = write(fd, (char*)(&response) + bytesWritten, sizeof(int) - bytesWritten);
-        if (chunk < 0) {
-            perror("write");
-            exit(errno);
-        }
-        bytesWritten += chunk;
-    }
+    int fd = mtxpol::openOrDie(outputFifoName.c_str(), O_WRONLY);
+    mtxpol::writeMessage(fd, &response, sizeof(response));
     close(fd);
 }
 
@@ -126,23 +112,13 @@ void RequestManager::terminate() {
 }
 
 Request* RequestManager::makeRequestFromFile(const string& fileName) {
-    int fd = open(fileName.c_str(), O_RDONLY);
+    int fd = openOrDie(fileName.c_str(), O_RDONLY);
     int requestId;
     pid_t processId;
     MTXPOL_REQ_TYPE type;
     MTXPOL_MUTEX mutexId;
     void* in = alloca(MTXPOL_MESSAGE_SIZE);
-    int bytesRead = 0;
-    int numReads = 0;
-    while (bytesRead < MTXPOL_MESSAGE_SIZE && numReads < 100) {
-        ssize_t chunk = read(fd, static_cast<char*>(in) + bytesRead, MTXPOL_MESSAGE_SIZE - bytesRead);
-        if (chunk < 0) {
-            close(fd);
-            return nullptr;
-        }
-        bytesRead += chunk;
-        numReads += 1;
-    }
+    int bytesRead = readMessage(fd, in, MTXPOL_MESSAGE_SIZE, 100);
     close(fd);
     if (bytesRead < MTXPOL_MESSAGE_SIZE) {
         return nullptr;

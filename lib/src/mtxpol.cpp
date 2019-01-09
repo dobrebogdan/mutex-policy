@@ -11,6 +11,8 @@ using mtxpol::getRandomInteger;
 using mtxpol::sendMessageToDaemon;
 using mtxpol::pollForResponse;
 
+namespace {
+
 void* buildRequest(int requestId, MTXPOL_REQ_TYPE requestType, pid_t processId, MTXPOL_MUTEX mutexId) {
     int cursor = 0;
     void* message = malloc(MTXPOL_MESSAGE_SIZE);
@@ -43,6 +45,8 @@ int mtxpol_Request(MTXPOL_REQ_TYPE requestType, MTXPOL_MUTEX mutexId) {
     }
     return response;
 }
+
+}  // namespace
 
 int mtxpol_Open(MTXPOL_MUTEX mutexId) {
     return mtxpol_Request(MTXPOL_REQ_OPEN, mutexId);

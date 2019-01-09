@@ -13,8 +13,7 @@ using mtxpol::RequestManager;
 using std::cout;
 
 int main(int argc, char* argv[]) {
-
-//    daemonize();
+    daemonize();
 
     auto policy = new MutexPolicy();
     policy->startRequestHandlerThread();
@@ -25,6 +24,7 @@ int main(int argc, char* argv[]) {
     requestManager->setOnRequestCallback([&policy](Request* request) {
         policy->enqueueRequest(request);
     });
+
     requestManager->start();
 
     delete policy;

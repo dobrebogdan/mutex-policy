@@ -3,8 +3,6 @@
 
 #include "mtxpol_constants.hpp"
 
-int mtxpol_Request(MTXPOL_REQ_TYPE requestType, MTXPOL_MUTEX mutexId);
-
 int mtxpol_Open(MTXPOL_MUTEX mutexId);
 
 int mtxpol_Close(MTXPOL_MUTEX mutexId);
