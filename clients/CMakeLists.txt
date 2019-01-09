@@ -1,0 +1,2 @@
+add_executable(simple_lock_wait_unlock simple_lock_wait_unlock.cpp)
+target_link_libraries(simple_lock_wait_unlock PUBLIC mtxpol)
