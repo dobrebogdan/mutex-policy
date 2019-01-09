@@ -11,8 +11,6 @@ using std::cout;
 
 int main() {
     auto policy = new MutexPolicy();
-    policy->startRequestHandlerThread();
-    policy->startRequestResolverThread();
     openDebugShell(policy);
     delete policy;
     return 0;

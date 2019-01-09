@@ -14,18 +14,23 @@
 namespace mtxpol {
 
 /// Main daemon class.
+///
+/// This creates a 3-thread process, in a consumer-producer style:
+/// - The first thread (the one that instantiates the daemon) adds requests to the daemon
+///   through calls to `enqueueRequest`. These requests are placed in a queue (`requestsQueue`).
+/// - The second thread consumes requests from the `requestsQueue`, handles them (decides the output),
+///   and enqueues them further in the `resolvedRequestsQueue`.
+/// - The third thread consumes the resolved requests from the `resolvedRequestsQueue` and actually
+///   sends the response back to the requesting client (by calling `Request::resolve(response)`).
+///
+/// This system is in place to allow the second thread (the actual mutex policy) to run as fast as possible,
+/// since the main thread and the resolver thread can be scaled a lot easier (by running multiple threads
+/// instead of one, for example), while the mutex policy has to stay mainly single-threaded.
 class MutexPolicy {
  public:
+    MutexPolicy();
+
     ~MutexPolicy();
-
-    /// Start handling requests on a new thread.
-    void startRequestHandlerThread();
-
-    /// Start the thread that calls callbacks and cleans up resolved requests.
-    void startRequestResolverThread();
-
-    /// Terminate the thread loops.
-    void terminate();
 
     void enqueueRequest(Request* request);
 

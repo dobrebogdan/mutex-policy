@@ -48,7 +48,6 @@ void openDebugShell(MutexPolicy* policy) {
     while (cin >> cmd) {
         if (cmd == "exit") {
             cout << "Exiting...\n";
-            policy->terminate();
             break;
         } else {
             int id, procId;

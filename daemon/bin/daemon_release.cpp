@@ -16,15 +16,12 @@ int main(int argc, char* argv[]) {
     daemonize();
 
     auto policy = new MutexPolicy();
-    policy->startRequestHandlerThread();
-    policy->startRequestResolverThread();
 
     auto requestManager = new RequestManager();
     requestManager->ensureDirectoryStructure();
     requestManager->setOnRequestCallback([&policy](Request* request) {
         policy->enqueueRequest(request);
     });
-
     requestManager->start();
 
     delete policy;

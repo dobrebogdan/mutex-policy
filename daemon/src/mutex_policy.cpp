@@ -16,34 +16,21 @@ using std::tie;
 
 namespace mtxpol {
 
-MutexPolicy::~MutexPolicy() {
-    terminate();
-    if (requestHandlerThread != nullptr) {
-        requestHandlerThread->join();
-        delete requestHandlerThread;
-    }
-    if (requestResolverThread != nullptr) {
-        requestResolverThread->join();
-        delete requestResolverThread;
-    }
-}
-
-void MutexPolicy::startRequestHandlerThread() {
-    if (requestHandlerThread != nullptr) {
-        throw runtime_error("Handler thread started twice!");
-    }
+MutexPolicy::MutexPolicy() {
     requestHandlerThread = new thread(&MutexPolicy::startRequestHandling, this);
-}
-
-void MutexPolicy::startRequestResolverThread() {
-    if (requestResolverThread != nullptr) {
-        throw runtime_error("Resolver thread started twice!");
-    }
     requestResolverThread = new thread(&MutexPolicy::startRequestResolving, this);
 }
 
-void MutexPolicy::terminate() {
+MutexPolicy::~MutexPolicy() {
     isTerminated = true;
+    requestHandlerThread->join();
+    requestResolverThread->join();
+    delete requestHandlerThread;
+    delete requestResolverThread;
+}
+
+void MutexPolicy::enqueueRequest(Request* request) {
+    requestsQueue.put(request);
 }
 
 void MutexPolicy::startRequestHandling() {
@@ -91,9 +78,9 @@ void MutexPolicy::handleRequest(Request* req) {
             throw runtime_error("Unknown request type.");
     }
     if (response == MTXPOL_REENQUEUE_REQUEST) {
-        resolvedRequestsQueue.put({req, response});
-    } else {
         mutexes[req->getMutexId()]->pushPendingLockRequest(req);
+    } else {
+        resolvedRequestsQueue.put({req, response});
     }
     if (resolvableLockRequest != nullptr) {
         // Handle a lock request that was pending in case the mutex it requested
@@ -155,10 +142,6 @@ int MutexPolicy::unlockMutex(MTXPOL_MUTEX mutexId, pid_t processId) {
     }
     mutexPosition->second->unlock();
     return MTXPOL_SUCCESS;
-}
-
-void MutexPolicy::enqueueRequest(Request* request) {
-    requestsQueue.put(request);
 }
 
 }  // namespace mtxpol
