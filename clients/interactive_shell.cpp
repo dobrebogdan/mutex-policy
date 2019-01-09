@@ -14,7 +14,20 @@ int main() {
     string s;
     int id;
 
-    while (cin >> s >> id) {
+    cout << "This is a simple interactive shell for testing mutexes from the MutexPolicy library.\n";
+    cout << "It assumes that the daemon is running and accepting requests in Release mode.\n";
+    cout << "Commands accepted are:\n";
+    cout << "\t- open <mutex-id>\n";
+    cout << "\t- close <mutex-id>\n";
+    cout << "\t- lock <mutex-id>\n";
+    cout << "\t- unlock <mutex-id>\n";
+    cout << "\t- exit\n";
+    cout << "$> ";
+    while (cin >> s) {
+        if (s == "exit") {
+            break;
+        }
+        cin >> id;
         int ret = -1;
         if (s == "open") {
             ret = mtxpol_Open(id);
@@ -25,13 +38,13 @@ int main() {
         } else if (s == "unlock") {
             ret = mtxpol_Unlock(id);
         }
-        cout << "Response: " << ret;
         if (ret == -1) {
             cout << " (unknown command).";
         } else {
-            cout << " (" << prettyResponse(ret) << ")";
+            cout << ret << " (" << prettyResponse(ret) << ")";
         }
         cout << "\n";
+        cout << "$> ";
     }
 
     return 0;
