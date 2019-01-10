@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <stdlib.h>
 
 #include <debug/debug_shell.hpp>
 #include <debug/prettify.hpp>
