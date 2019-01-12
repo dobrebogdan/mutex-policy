@@ -26,9 +26,8 @@ void ensureDir(const string &path) {
     }
 }
 
-vector<string> findInputFiles() {
+vector<string> findInputFiles(string folderName=mtxpol::mtxpolInDir()) {
     struct dirent* dirp;
-    string folderName = mtxpol::mtxpolInDir();
     DIR* dp = opendir(folderName.c_str());
     if (dp == nullptr) {
         perror("opendir");
@@ -78,6 +77,18 @@ void RequestManager::ensureDirectoryStructure() {
     ensureDir(mtxpolHome());
     ensureDir(mtxpolInDir());
     ensureDir(mtxpolOutDir());
+
+    vector<string> inFiles = findInputFiles();
+    vector<string> outFiles = findInputFiles(mtxpolOutDir());
+    inFiles.insert(inFiles.end(), outFiles.begin(), outFiles.end());
+    for (const string& file : inFiles) {
+        int removeStatus = remove(file.c_str());
+        if (removeStatus != 0) {
+            perror("remove");
+            exit(errno);
+        }
+    }
+
     ensuredDirectoryStructure = true;
 }
 
