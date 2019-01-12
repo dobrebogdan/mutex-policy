@@ -8,3 +8,7 @@ target_include_directories(interactive_shell PUBLIC ../daemon/src)
 add_executable(big_test big_test.cpp ../daemon/src/debug/prettify.cpp)
 target_link_libraries(big_test PUBLIC mtxpol)
 target_include_directories(big_test PUBLIC ../daemon/src)
+
+add_executable(benchmark_test benchmark_test.cpp)
+target_link_libraries(benchmark_test PUBLIC mtxpol)
+target_include_directories(benchmark_test PUBLIC ../daemon/src)
