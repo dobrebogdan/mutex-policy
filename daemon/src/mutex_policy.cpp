@@ -79,6 +79,7 @@ void MutexPolicy::handleRequest(Request* req) {
     }
     if (response == MTXPOL_REENQUEUE_REQUEST) {
         mutexes[req->getMutexId()]->pushPendingLockRequest(req);
+        syscall(331, req->getProcessId());
     } else {
         resolvedRequestsQueue.put({req, response});
     }
@@ -86,6 +87,7 @@ void MutexPolicy::handleRequest(Request* req) {
         // Handle a lock request that was pending in case the mutex it requested
         // has been unlocked.
         handleRequest(resolvableLockRequest);
+        syscall(332, resolvableLockRequest -> getProcessId());
     }
 }
 
